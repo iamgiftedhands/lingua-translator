@@ -716,3 +716,133 @@ Object.keys(phrasebook).forEach(
         categoryTabs.appendChild(tab);
     }
 );
+
+
+/* =========================
+   EXPLAIN THIS TRANSLATION
+========================= */
+
+const explainButton =
+    document.getElementById("explainButton");
+
+const explanation =
+    document.getElementById("explanation");
+
+const explainMeaning =
+    document.getElementById("explainMeaning");
+
+const explainTone =
+    document.getElementById("explainTone");
+
+const explainContext =
+    document.getElementById("explainContext");
+
+const explainExample =
+    document.getElementById("explainExample");
+
+
+explainButton.addEventListener("click", async () => {
+
+    const translation =
+        result.textContent.trim();
+
+
+    if (
+        !translation ||
+        translation ===
+        "Your translation will appear here..." ||
+        translation.startsWith("Translation failed") ||
+        translation === "Translating..."
+    ) {
+        return;
+    }
+
+
+    explainButton.disabled = true;
+
+    explainButton.textContent =
+        "💡 Explaining...";
+
+
+    try {
+
+        const response =
+            await fetch("/explain", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    text: textInput.value.trim(),
+
+                    translation: translation,
+
+                    source: sourceLanguage.value,
+
+                    target: targetLanguage.value
+
+                })
+
+            });
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error ||
+                "Explanation failed."
+            );
+
+        }
+
+
+        explainMeaning.textContent =
+            data.meaning;
+
+        explainTone.textContent =
+            data.tone;
+
+        explainContext.textContent =
+            data.context;
+
+        explainExample.textContent =
+            data.example;
+
+
+        explanation.classList.remove("hidden");
+
+
+        explanation.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Explain error:",
+            error
+        );
+
+        alert(error.message);
+
+    } finally {
+
+        explainButton.disabled = false;
+
+        explainButton.textContent =
+            "💡 Explain";
+
+    }
+
+});

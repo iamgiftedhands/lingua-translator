@@ -967,11 +967,69 @@ footer {
     background: var(--card-hover);
 }
 
-footer a {
-    color: var(--primary-light);
-    text-decoration: none;
+
+/* =========================
+   EXPLANATION PANEL
+========================= */
+
+.explanation {
+    margin-top: 18px;
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 12px;
+
+    animation: fadeIn 0.35s ease;
 }
 
-footer a:hover {
-    text-decoration: underline;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.explanation-block {
+    padding: 16px;
+
+    border: 1px solid rgba(124, 92, 255, 0.25);
+
+    border-radius: 13px;
+
+    background: rgba(124, 92, 255, 0.06);
+}
+
+.explanation-block h4 {
+    font-size: 11px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.5px;
+
+    text-transform: uppercase;
+
+    color: var(--primary-light);
+
+    margin-bottom: 7px;
+}
+
+.explanation-block p {
+    font-size: 14px;
+
+    line-height: 1.65;
+
+    color: var(--text);
+}
+
+@media (max-width: 700px) {
+
+    .explanation {
+        grid-template-columns: 1fr;
+    }
 }
