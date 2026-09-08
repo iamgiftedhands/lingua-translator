@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+
+
+    <meta charset="UTF-8">
+
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+
+    <title>Lingua — Language Translator</title>
+
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+
+</head>
+
+
+
+<body>
+
+
+    <!-- NAVBAR -->
+
+
+    <header class="navbar">
+
+
+        <div class="brand">
+            <span class="brand-icon">🌐</span>
+            <span>Lingua</span>
+        </div>
+
+
+        <nav>
+
+
+            <a href="#" class="active">
+                Translator
+            </a>
+
+
+            <button
+                id="themeButton"
+                class="theme-button"
+                title="Toggle dark mode"
+            >
+                🌙
+            </button>
+
+
+        </nav>
+
+
+    </header>
+
+
+
+    <!-- MAIN -->
+
+
+    <main class="main-container">
+
+
+        <section class="hero">
+
+
+            <p class="eyebrow">
+                LANGUAGE TRANSLATOR
+            </p>
+
+
+            <h1>
+                Words without<br>
+                <span>boundaries.</span>
+            </h1>
+
+
+            <p class="hero-description">
+                Translate text quickly and easily between
+                multiple languages.
+            </p>
+
+
+        </section>
+
+
+
+        <!-- TRANSLATOR -->
+
+
+        <section class="translator">
+
+
+            <!-- LANGUAGE BAR -->
+
+
+            <div class="language-bar">
+
+
+                <div class="language-selector">
+
+
+                    <label for="sourceLanguage">
+                        FROM
+                    </label>
+
+
+                    <select id="sourceLanguage">
+
+
+                        <option value="auto">
+                            Auto Detect
+                        </option>
+
+
+                        {% for language, code in languages.items() %}
+
+
+                            {% if code != "auto" %}
+
+
+                                <option value="{{ code }}">
+                                    {{ language }}
+                                </option>
+
+
+                            {% endif %}
+
+
+                        {% endfor %}
+
+
+                    </select>
+
+
+                </div>
+
+
+
+                <button
+                    id="swapButton"
+                    class="swap-button"
+                    title="Swap languages"
+                >
+                    ⇄
+                </button>
+
+
+
+                <div class="language-selector">
+
+
+                    <label for="targetLanguage">
+                        TO
+                    </label>
+
+
+                    <select id="targetLanguage">
+
+
+                        {% for language, code in languages.items() %}
+
+
+                            {% if code != "auto" %}
+
+
+                                <option
+                                    value="{{ code }}"
+                                    {% if code == "fr" %}
+                                    selected
+                                    {% endif %}
+                                >
+                                    {{ language }}
+                                </option>
+
+
+                            {% endif %}
+
+
+                        {% endfor %}
+
+
+                    </select>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- TRANSLATION AREA -->
+
+
+            <div class="translation-area">
+
+
+                <!-- INPUT -->
+
+
+                <div class="translation-card">
+
+
+                    <textarea
+                        id="text"
+                        maxlength="5000"
+                        placeholder="Type something here..."
+                    ></textarea>
+
+
+                    <div class="card-footer">
+
+
+                        <button
+                            id="clearButton"
+                            class="small-button"
+                            type="button"
+                        >
+                            🗑 Clear
+                        </button>
+
+
+                        <span id="counter">
+                            0 / 5000
+                        </span>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- OUTPUT -->
+
+
+                <div class="translation-card output-card">
+
+
+                    <div
+                        id="result"
+                        class="result"
+                    >
+                        Your translation will appear here...
+                    </div>
+
+
+                    <div class="card-footer">
+
+
+                        <button
+                            id="speakButton"
+                            class="small-button"
+                            type="button"
+                        >
+                            🔊 Listen
+                        </button>
+
+
+                        <button
+                            id="copyButton"
+                            class="small-button"
+                            type="button"
+                        >
+                            📋 Copy
+                        </button>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- TRANSLATE BUTTON -->
+
+
+            <button
+                id="translateButton"
+                class="translate-button"
+                type="button"
+            >
+
+
+                <span id="buttonText">
+                    Translate
+                </span>
+
+
+                <span
+                    id="loading"
+                    class="loading hidden"
+                >
+                    Translating...
+                </span>
+
+
+            </button>
+
+
+        </section>
+
+
+
+        <!-- FEATURES -->
+
+
+        <section class="features">
+
+
+            <div class="feature">
+
+
+                <span>⚡</span>
+
+
+                <div>
+
+
+                    <h3>Fast</h3>
+
+
+                    <p>
+                        Get translations in seconds.
+                    </p>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <div class="feature">
+
+
+                <span>🌍</span>
+
+
+                <div>
+
+
+                    <h3>Multilingual</h3>
+
+
+                    <p>
+                        Translate across many languages.
+                    </p>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <div class="feature">
+
+
+                <span>🔒</span>
+
+
+                <div>
+
+
+                    <h3>Simple</h3>
+
+
+                    <p>
+                        A clean and easy experience.
+                    </p>
+
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+
+    <footer>
+
+
+        <p>
+            © 2026 Lingua.
+        </p>
+
+
+    </footer>
+
+
+
+    <script
+        src="{{ url_for('static', filename='script.js') }}"
+    ></script>
+
+
+</body>
+
+
+</html>
