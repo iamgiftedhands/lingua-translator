@@ -134,6 +134,14 @@ translateButton.addEventListener("click", async () => {
             data.translation;
 
 
+        saveHistoryItem({
+            text: text,
+            translation: data.translation,
+            source: source,
+            target: target
+        });
+
+
     } catch (error) {
 
         console.error(
@@ -386,3 +394,325 @@ if (savedTheme === "true") {
     setTheme(false);
 
 }
+
+/* =========================
+   HISTORY (localStorage)
+========================= */
+
+const HISTORY_KEY = "linguaHistory";
+
+const historyList =
+    document.getElementById("historyList");
+
+const clearHistoryButton =
+    document.getElementById("clearHistoryButton");
+
+
+function languageName(code) {
+
+    if (code === "auto") return "Auto";
+
+    const option =
+        targetLanguage.querySelector(
+            `option[value="${code}"]`
+        ) ||
+        sourceLanguage.querySelector(
+            `option[value="${code}"]`
+        );
+
+    return option ? option.textContent.trim() : code;
+}
+
+
+function getHistory() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(HISTORY_KEY)
+        ) || [];
+
+    } catch {
+
+        return [];
+    }
+}
+
+
+function setHistory(items) {
+
+    localStorage.setItem(
+        HISTORY_KEY,
+        JSON.stringify(items)
+    );
+
+    renderHistory();
+}
+
+
+function saveHistoryItem(item) {
+
+    const items = getHistory();
+
+    items.unshift(item);
+
+    setHistory(items.slice(0, 10));
+}
+
+
+function renderHistory() {
+
+    const items = getHistory();
+
+    historyList.innerHTML = "";
+
+
+    if (items.length === 0) {
+
+        const note =
+            document.createElement("p");
+
+        note.className = "empty-note";
+
+        note.textContent =
+            "No translations yet.";
+
+        historyList.appendChild(note);
+
+        return;
+    }
+
+
+    items.forEach((item, index) => {
+
+        const row =
+            document.createElement("div");
+
+        row.className = "history-item";
+
+
+        const textSpan =
+            document.createElement("span");
+
+        textSpan.className = "history-text";
+
+        textSpan.textContent =
+            item.text + "  →  " + item.translation;
+
+
+        const langSpan =
+            document.createElement("span");
+
+        langSpan.className = "history-langs";
+
+        langSpan.textContent =
+            languageName(item.source) +
+            " → " +
+            languageName(item.target);
+
+
+        const deleteButton =
+            document.createElement("button");
+
+        deleteButton.className =
+            "small-button";
+
+        deleteButton.type = "button";
+
+        deleteButton.textContent = "✕";
+
+        deleteButton.title = "Delete";
+
+
+        deleteButton.addEventListener(
+            "click",
+            (event) => {
+
+                event.stopPropagation();
+
+                const current = getHistory();
+
+                current.splice(index, 1);
+
+                setHistory(current);
+            }
+        );
+
+
+        // click a history row to reload it
+        row.addEventListener("click", () => {
+
+            textInput.value = item.text;
+
+            counter.textContent =
+                `${item.text.length} / 5000`;
+
+            sourceLanguage.value = item.source;
+
+            targetLanguage.value = item.target;
+
+            result.textContent = item.translation;
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+        });
+
+
+        row.appendChild(textSpan);
+
+        row.appendChild(langSpan);
+
+        row.appendChild(deleteButton);
+
+        historyList.appendChild(row);
+    });
+}
+
+
+clearHistoryButton.addEventListener("click", () => {
+
+    setHistory([]);
+
+});
+
+
+renderHistory();
+
+
+/* =========================
+   PHRASEBOOK
+========================= */
+
+const phrasebook = {
+
+    "Greetings": [
+        "Good morning",
+        "Good evening",
+        "How are you?",
+        "Nice to meet you",
+        "Welcome",
+        "Long time no see"
+    ],
+
+    "Travel": [
+        "Where is the bus stop?",
+        "How much is this?",
+        "I need a taxi",
+        "Where is the hotel?",
+        "Can you help me?",
+        "I am looking for the market"
+    ],
+
+    "Food": [
+        "I am hungry",
+        "The food is delicious",
+        "Water, please",
+        "What do you recommend?",
+        "The bill, please",
+        "I don't eat pepper"
+    ],
+
+    "Everyday": [
+        "Thank you very much",
+        "Excuse me",
+        "I don't understand",
+        "Please speak slowly",
+        "See you tomorrow",
+        "What is your name?"
+    ],
+
+    "Emergency": [
+        "Help!",
+        "Call the police",
+        "I need a doctor",
+        "I am lost",
+        "It is urgent"
+    ]
+};
+
+
+const categoryTabs =
+    document.getElementById("categoryTabs");
+
+const phraseList =
+    document.getElementById("phraseList");
+
+
+function renderPhrases(category) {
+
+    phraseList.innerHTML = "";
+
+
+    phrasebook[category].forEach((phrase) => {
+
+        const chip =
+            document.createElement("button");
+
+        chip.className = "phrase-chip";
+
+        chip.type = "button";
+
+        chip.textContent = phrase;
+
+
+        chip.addEventListener("click", () => {
+
+            textInput.value = phrase;
+
+            counter.textContent =
+                `${phrase.length} / 5000`;
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+
+            textInput.focus();
+        });
+
+
+        phraseList.appendChild(chip);
+    });
+}
+
+
+Object.keys(phrasebook).forEach(
+    (category, index) => {
+
+        const tab =
+            document.createElement("button");
+
+        tab.className = "category-tab";
+
+        tab.type = "button";
+
+        tab.textContent = category;
+
+
+        if (index === 0) {
+
+            tab.classList.add("active");
+
+            renderPhrases(category);
+        }
+
+
+        tab.addEventListener("click", () => {
+
+            document
+                .querySelectorAll(".category-tab")
+                .forEach((t) =>
+                    t.classList.remove("active")
+                );
+
+            tab.classList.add("active");
+
+            renderPhrases(category);
+        });
+
+
+        categoryTabs.appendChild(tab);
+    }
+);
