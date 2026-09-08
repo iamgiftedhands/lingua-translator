@@ -1053,3 +1053,55 @@ footer {
         opacity: 0.45;
     }
 }
+
+
+/* =========================
+   VARIANT TABS
+========================= */
+
+.variant-tabs {
+    display: flex;
+
+    gap: 6px;
+
+    padding: 10px 12px 0;
+}
+
+.variant-tab {
+    padding: 6px 13px;
+
+    border-radius: 100px;
+
+    border: 1px solid var(--border);
+
+    background: transparent;
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.5px;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.variant-tab:hover {
+    color: var(--text);
+}
+
+.variant-tab.active {
+    background:
+        linear-gradient(
+            100deg,
+            #7655ff,
+            #527eff
+        );
+
+    color: white;
+
+    border-color: transparent;
+}

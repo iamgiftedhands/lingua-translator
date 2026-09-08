@@ -134,6 +134,9 @@ translateButton.addEventListener("click", async () => {
             data.translation;
 
 
+        resetVariants(data.translation);
+
+
         saveHistoryItem({
             text: text,
             translation: data.translation,
@@ -983,3 +986,168 @@ if (!SpeechRecognition) {
         recognition.start();
     });
 }
+
+
+/* =========================
+   TRANSLATION VARIANTS
+   (Literal / Natural / Casual)
+========================= */
+
+const variantTabs =
+    document.querySelectorAll(".variant-tab");
+
+
+let variantData = {
+    literal: null,
+    natural: null,
+    casual: null
+};
+
+let variantsLoading = false;
+
+
+function setActiveTab(name) {
+
+    variantTabs.forEach((tab) => {
+
+        tab.classList.toggle(
+            "active",
+            tab.dataset.variant === name
+        );
+    });
+}
+
+
+function resetVariants(literalText) {
+
+    variantData = {
+        literal: literalText,
+        natural: null,
+        casual: null
+    };
+
+    setActiveTab("literal");
+}
+
+
+async function fetchVariants() {
+
+    variantsLoading = true;
+
+
+    const response =
+        await fetch("/variants", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type":
+                    "application/json"
+            },
+
+            body: JSON.stringify({
+
+                text: textInput.value.trim(),
+
+                translation: variantData.literal,
+
+                source: sourceLanguage.value,
+
+                target: targetLanguage.value
+
+            })
+
+        });
+
+
+    const data =
+        await response.json();
+
+
+    variantsLoading = false;
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error ||
+            "Could not get variants."
+        );
+    }
+
+
+    variantData.natural = data.natural;
+
+    variantData.casual = data.casual;
+}
+
+
+variantTabs.forEach((tab) => {
+
+    tab.addEventListener("click", async () => {
+
+        const name = tab.dataset.variant;
+
+
+        // nothing translated yet
+        if (!variantData.literal) {
+            return;
+        }
+
+
+        if (name === "literal") {
+
+            setActiveTab("literal");
+
+            result.textContent =
+                variantData.literal;
+
+            return;
+        }
+
+
+        setActiveTab(name);
+
+
+        // already fetched? just show it
+        if (variantData[name]) {
+
+            result.textContent =
+                variantData[name];
+
+            return;
+        }
+
+
+        if (variantsLoading) {
+            return;
+        }
+
+
+        result.textContent =
+            "Getting " + name + " version...";
+
+
+        try {
+
+            await fetchVariants();
+
+            result.textContent =
+                variantData[name];
+
+        } catch (error) {
+
+            console.error(
+                "Variants error:",
+                error
+            );
+
+            result.textContent =
+                variantData.literal;
+
+            setActiveTab("literal");
+
+            alert(error.message);
+        }
+    });
+});
