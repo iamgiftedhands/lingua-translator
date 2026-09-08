@@ -846,3 +846,140 @@ explainButton.addEventListener("click", async () => {
     }
 
 });
+
+
+/* =========================
+   VOICE INPUT (speech to text)
+========================= */
+
+const micButton =
+    document.getElementById("micButton");
+
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+
+// map our language codes to speech locales
+const speechLocales = {
+    "auto": "en-US",
+    "en": "en-US",
+    "fr": "fr-FR",
+    "es": "es-ES",
+    "de": "de-DE",
+    "it": "it-IT",
+    "pt": "pt-PT",
+    "nl": "nl-NL",
+    "ru": "ru-RU",
+    "ar": "ar-SA",
+    "hi": "hi-IN",
+    "ja": "ja-JP",
+    "ko": "ko-KR",
+    "zh-CN": "zh-CN",
+    "el": "el-GR",
+    "af": "af-ZA",
+    "sw": "sw-KE",
+    "yo": "yo-NG",
+    "ig": "ig-NG",
+    "ha": "ha-NG"
+};
+
+
+if (!SpeechRecognition) {
+
+    // browser doesn't support it (e.g. Firefox)
+    micButton.style.display = "none";
+
+} else {
+
+    let recognition = null;
+
+    let listening = false;
+
+
+    micButton.addEventListener("click", () => {
+
+        // stop if already listening
+        if (listening && recognition) {
+
+            recognition.stop();
+
+            return;
+        }
+
+
+        recognition = new SpeechRecognition();
+
+        recognition.lang =
+            speechLocales[sourceLanguage.value] ||
+            "en-US";
+
+        recognition.interimResults = false;
+
+        recognition.maxAlternatives = 1;
+
+
+        recognition.onstart = () => {
+
+            listening = true;
+
+            micButton.textContent =
+                "🔴 Listening...";
+
+            micButton.classList.add("recording");
+        };
+
+
+        recognition.onresult = (event) => {
+
+            const spoken =
+                event.results[0][0].transcript;
+
+
+            const existing =
+                textInput.value.trim();
+
+
+            textInput.value =
+                existing
+                    ? existing + " " + spoken
+                    : spoken;
+
+
+            counter.textContent =
+                `${textInput.value.length} / 5000`;
+        };
+
+
+        recognition.onerror = (event) => {
+
+            console.error(
+                "Speech error:",
+                event.error
+            );
+
+
+            if (event.error === "not-allowed") {
+
+                alert(
+                    "Microphone access was blocked. " +
+                    "Allow it in your browser to use voice input."
+                );
+            }
+        };
+
+
+        recognition.onend = () => {
+
+            listening = false;
+
+            micButton.textContent =
+                "🎙 Speak";
+
+            micButton.classList.remove("recording");
+        };
+
+
+        recognition.start();
+    });
+}

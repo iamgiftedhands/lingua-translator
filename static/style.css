@@ -1033,3 +1033,23 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* =========================
+   MIC BUTTON
+========================= */
+
+.small-button.recording {
+    color: #ff5c7a;
+
+    animation: pulse 1.2s ease infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.45;
+    }
+}
