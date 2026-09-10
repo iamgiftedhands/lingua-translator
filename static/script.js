@@ -777,6 +777,23 @@ explainButton.addEventListener("click", async () => {
     setButton(explainButton, "#icon-bulb", "Explaining...");
 
 
+    // show the panel straight away with placeholder bars
+    explanation.classList.add("loading");
+
+    explanation.classList.remove("hidden");
+
+
+    [
+        explainMeaning,
+        explainTone,
+        explainContext,
+        explainExample
+    ].forEach((el) => {
+
+        el.textContent = "";
+    });
+
+
     try {
 
         const response =
@@ -831,6 +848,8 @@ explainButton.addEventListener("click", async () => {
             data.example;
 
 
+        explanation.classList.remove("loading");
+
         explanation.classList.remove("hidden");
 
 
@@ -846,6 +865,10 @@ explainButton.addEventListener("click", async () => {
             "Explain error:",
             error
         );
+
+        explanation.classList.remove("loading");
+
+        explanation.classList.add("hidden");
 
         alert(error.message);
 

@@ -1205,3 +1205,35 @@ footer {
 
     user-select: none;
 }
+
+
+/* =========================
+   EXPLANATION LOADING STATE
+========================= */
+
+.explanation.loading .explanation-block p {
+    min-height: 42px;
+
+    border-radius: 6px;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--input) 25%,
+            var(--card-hover) 50%,
+            var(--input) 75%
+        );
+
+    background-size: 200% 100%;
+
+    animation: shimmer 1.3s ease infinite;
+}
+
+@keyframes shimmer {
+    from {
+        background-position: 200% 0;
+    }
+    to {
+        background-position: -200% 0;
+    }
+}

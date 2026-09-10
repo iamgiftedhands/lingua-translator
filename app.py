@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 import requests
 from dotenv import load_dotenv
@@ -35,15 +36,53 @@ languages = {
 }
 
 
+# lite first: it doesn't do internal "thinking", so it answers
+# much faster. the fuller model is the fallback if lite errors.
 GEMINI_MODELS = [
-    "gemini-flash-latest",
-    "gemini-flash-lite-latest"
+    "gemini-flash-lite-latest",
+    "gemini-flash-latest"
 ]
 
 
+def language_name(code):
+    """Turn a language code into its display name so
+    Gemini prompts read naturally."""
+
+    if code == "auto":
+        return "the detected language"
+
+    for name, c in languages.items():
+        if c == code:
+            return name
+
+    return code
+
+
+def looks_like_error_page(text):
+    """deep-translator scrapes Google's free endpoint, and when
+    Google returns an error page the library hands back the page
+    text as if it were a translation. Catch that."""
+
+    if not text or not text.strip():
+        return True
+
+    markers = [
+        "That's an error",
+        "That\u2019s an error",
+        "That's all we know",
+        "That\u2019s all we know",
+        "Error 500 (Server Error)",
+        "Error 502",
+        "Error 503",
+        "(Server Error)"
+    ]
+
+    return any(m in text for m in markers)
+
+
 def call_gemini(prompt):
-    """Send a prompt to Gemini, trying a fallback model if
-    the first one errors. Returns the parsed JSON dict."""
+    """Send a prompt to Gemini. Tries each model in turn and
+    skips over timeouts or connection errors."""
 
     api_key = os.environ.get("GEMINI_API_KEY")
 
@@ -77,6 +116,9 @@ def call_gemini(prompt):
 
         if response.ok:
             break
+
+    if response is None:
+        raise RuntimeError("No response from Gemini.")
 
     response.raise_for_status()
 
@@ -134,16 +176,71 @@ def translate():
                 "error": "Please select a target language."
             }), 400
 
-        translator = GoogleTranslator(
-            source=source,
-            target=target
-        )
+        # Google's free endpoint is flaky and rate limits,
+        # so try a few times before giving up
+        last_error = None
 
-        translated = translator.translate(text)
+        for attempt in range(3):
 
-        return jsonify({
-            "translation": translated
-        })
+            try:
+
+                translated = GoogleTranslator(
+                    source=source,
+                    target=target
+                ).translate(text)
+
+                if looks_like_error_page(translated):
+
+                    print(
+                        f"Google returned an error page "
+                        f"(attempt {attempt + 1})"
+                    )
+
+                    last_error = RuntimeError(
+                        "Google returned an error page."
+                    )
+
+                    time.sleep(0.7)
+
+                    continue
+
+                return jsonify({
+                    "translation": translated
+                })
+
+            except Exception as e:
+
+                last_error = e
+
+                print(
+                    f"Google Translate attempt {attempt + 1} failed:",
+                    e
+                )
+
+                time.sleep(0.7)
+
+        # still nothing? let Gemini handle it
+        if os.environ.get("GEMINI_API_KEY"):
+
+            print("Falling back to Gemini for translation.")
+
+            prompt = (
+                "You are a translator.\n"
+                f"Translate this from {language_name(source)} "
+                f"to {language_name(target)}:\n"
+                f"{text}\n\n"
+                "Respond ONLY with a JSON object, no markdown fences: "
+                '{"translation": "..."}'
+            )
+
+            parsed = call_gemini(prompt)
+
+            if parsed and parsed.get("translation"):
+                return jsonify({
+                    "translation": str(parsed["translation"])
+                })
+
+        raise last_error or RuntimeError("Translation failed.")
 
     except Exception as e:
         print("Translation error:", e)
@@ -186,8 +283,8 @@ def explain():
 
         prompt = (
             "You are a friendly language expert. A user translated a phrase.\n"
-            f"Original ({source}): {text}\n"
-            f"Translation ({target}): {translation}\n\n"
+            f"Original ({language_name(source)}): {text}\n"
+            f"Translation ({language_name(target)}): {translation}\n\n"
             "Respond ONLY with a JSON object, no markdown fences, with exactly "
             "these keys:\n"
             '"meaning": what the phrase actually means, in plain English (1-2 short sentences).\n'
@@ -249,13 +346,13 @@ def variants():
 
         prompt = (
             "You are a native-level translator.\n"
-            f"Original ({source}): {text}\n"
-            f"Literal translation ({target}): {translation}\n\n"
+            f"Original ({language_name(source)}): {text}\n"
+            f"Literal translation ({language_name(target)}): {translation}\n\n"
             "Respond ONLY with a JSON object, no markdown fences, with exactly "
             "these keys:\n"
-            f'"natural": how a native {target} speaker would normally say this. '
+            f'"natural": how a native {language_name(target)} speaker would normally say this. '
             "Just the sentence, nothing else.\n"
-            f'"casual": how you would say this to a close friend in {target}, '
+            f'"casual": how you would say this to a close friend in {language_name(target)}, '
             "informal/slang where appropriate. Just the sentence, nothing else."
         )
 
