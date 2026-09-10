@@ -28,6 +28,7 @@ languages = {
     "Italian": "it",
     "Japanese": "ja",
     "Korean": "ko",
+    "Nigerian Pidgin": "pcm",
     "Portuguese": "pt",
     "Russian": "ru",
     "Spanish": "es",
@@ -175,6 +176,32 @@ def translate():
             return jsonify({
                 "error": "Please select a target language."
             }), 400
+
+        # Google Translate mangles Pidgin, so anything with
+        # Pidgin on either side goes straight to Gemini
+        if source == "pcm" or target == "pcm":
+
+            if not os.environ.get("GEMINI_API_KEY"):
+                return jsonify({
+                    "error": "Pidgin translation is not configured."
+                }), 503
+
+            prompt = (
+                "You are a fluent Nigerian Pidgin speaker and translator.\n"
+                f"Translate this from {language_name(source)} "
+                f"to {language_name(target)}:\n"
+                f"{text}\n\n"
+                "Keep it authentic. Real Pidgin as spoken in Nigeria, "
+                "not word-for-word English substitution.\n"
+                'Respond ONLY with a JSON object, no markdown fences: '
+                '{"translation": "..."}'
+            )
+
+            parsed = call_gemini(prompt)
+
+            return jsonify({
+                "translation": str(parsed.get("translation", ""))
+            })
 
         # Google's free endpoint is flaky and rate limits,
         # so try a few times before giving up
@@ -328,6 +355,7 @@ def variants():
         translation = data.get("translation", "").strip()
         source = data.get("source", "auto")
         target = data.get("target", "en")
+        audience = data.get("audience", "friend")
 
         if not text or not translation:
             return jsonify({
@@ -344,16 +372,31 @@ def variants():
                 "error": "This feature is not configured."
             }), 503
 
+        audiences = {
+            "friend": "a close friend or someone your own age",
+            "elder": "an elder or someone who deserves respect",
+            "formal": "someone in a formal or professional setting"
+        }
+
+        listener = audiences.get(audience, audiences["friend"])
+
         prompt = (
-            "You are a native-level translator.\n"
+            "You are a native-level translator who understands that how "
+            "you speak depends on who you are speaking to.\n"
             f"Original ({language_name(source)}): {text}\n"
-            f"Literal translation ({language_name(target)}): {translation}\n\n"
+            f"Literal translation ({language_name(target)}): {translation}\n"
+            f"The listener is: {listener}\n\n"
+            f"Use the correct register for that listener in "
+            f"{language_name(target)}, including any respectful or honorific "
+            "forms the language requires. Relaxed must never mean "
+            "disrespectful when the listener is an elder or the setting "
+            "is formal.\n\n"
             "Respond ONLY with a JSON object, no markdown fences, with exactly "
             "these keys:\n"
-            f'"natural": how a native {language_name(target)} speaker would normally say this. '
-            "Just the sentence, nothing else.\n"
-            f'"casual": how you would say this to a close friend in {language_name(target)}, '
-            "informal/slang where appropriate. Just the sentence, nothing else."
+            f'"natural": how a native {language_name(target)} speaker would '
+            "normally say this to that listener. Just the sentence, nothing else.\n"
+            '"casual": the most relaxed way to say this that is still '
+            "appropriate for that listener. Just the sentence, nothing else."
         )
 
         parsed = call_gemini(prompt)

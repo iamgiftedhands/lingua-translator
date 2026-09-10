@@ -915,6 +915,7 @@ const speechLocales = {
     "af": "af-ZA",
     "sw": "sw-KE",
     "yo": "yo-NG",
+    "pcm": "en-NG",
     "ig": "ig-NG",
     "ha": "ha-NG"
 };
@@ -1083,7 +1084,9 @@ async function fetchVariants() {
 
                 source: sourceLanguage.value,
 
-                target: targetLanguage.value
+                target: targetLanguage.value,
+
+                audience: audienceSelect.value
 
             })
 
@@ -1181,3 +1184,89 @@ variantTabs.forEach((tab) => {
         }
     });
 });
+
+
+
+/* =========================
+   AUDIENCE (who you're speaking to)
+========================= */
+
+const audienceSelect =
+    document.getElementById("audience");
+
+
+audienceSelect.addEventListener("change", () => {
+
+    // register changed, so the cached versions are stale
+    variantData.natural = null;
+
+    variantData.casual = null;
+
+
+    const activeTab =
+        document.querySelector(".variant-tab.active");
+
+
+    if (
+        activeTab &&
+        activeTab.dataset.variant !== "literal"
+    ) {
+        activeTab.click();
+    }
+});
+
+
+/* =========================
+   HIDE LISTEN WHEN NO VOICE
+========================= */
+
+function hasVoiceFor(code) {
+
+    if (!window.speechSynthesis) {
+        return false;
+    }
+
+
+    const wanted =
+        (speechLocales[code] || code)
+            .toLowerCase()
+            .split("-")[0];
+
+
+    return window.speechSynthesis
+        .getVoices()
+        .some((voice) =>
+            voice.lang
+                .toLowerCase()
+                .startsWith(wanted)
+        );
+}
+
+
+function updateSpeakButton() {
+
+    // no voice installed for this language on this device,
+    // so hide the button rather than have it do nothing
+    speakButton.style.display =
+        hasVoiceFor(targetLanguage.value)
+            ? ""
+            : "none";
+}
+
+
+targetLanguage.addEventListener(
+    "change",
+    updateSpeakButton
+);
+
+
+if (window.speechSynthesis) {
+
+    window.speechSynthesis.addEventListener(
+        "voiceschanged",
+        updateSpeakButton
+    );
+}
+
+
+updateSpeakButton();

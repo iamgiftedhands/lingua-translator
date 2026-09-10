@@ -274,8 +274,6 @@ nav a.active {
 
     -webkit-background-clip: text;
 
-     background-clip: text;
-
     -webkit-text-fill-color: transparent;
 }
 
@@ -1238,4 +1236,50 @@ footer {
     to {
         background-position: -200% 0;
     }
+}
+
+
+/* =========================
+   AUDIENCE SELECT
+========================= */
+
+.audience-select {
+    margin-left: auto;
+
+    padding: 6px 10px;
+
+    border-radius: 100px;
+
+    border: 1px solid var(--border);
+
+    background: var(--input);
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+    font-family: inherit;
+
+    cursor: pointer;
+
+    outline: none;
+
+    transition: 0.2s;
+}
+
+.audience-select:hover,
+.audience-select:focus {
+    color: var(--text);
+
+    border-color: rgba(124, 92, 255, 0.5);
+}
+
+.audience-select option {
+    background: #151621;
+
+    color: white;
+}
+
+.variant-tabs {
+    align-items: center;
 }
