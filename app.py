@@ -54,20 +54,26 @@ def call_gemini(prompt):
 
     for model in GEMINI_MODELS:
 
-        response = requests.post(
-            "https://generativelanguage.googleapis.com/v1beta/"
-            f"models/{model}:generateContent",
-            headers={
-                "x-goog-api-key": api_key,
-                "Content-Type": "application/json"
-            },
-            json={
-                "contents": [
-                    {"parts": [{"text": prompt}]}
-                ]
-            },
-            timeout=30
-        )
+        try:
+
+            response = requests.post(
+                "https://generativelanguage.googleapis.com/v1beta/"
+                f"models/{model}:generateContent",
+                headers={
+                    "x-goog-api-key": api_key,
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "contents": [
+                        {"parts": [{"text": prompt}]}
+                    ]
+                },
+                timeout=60
+            )
+
+        except requests.exceptions.RequestException as e:
+            print("Gemini request failed:", e)
+            continue
 
         if response.ok:
             break
