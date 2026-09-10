@@ -1105,3 +1105,103 @@ footer {
 
     border-color: transparent;
 }
+
+
+/* =========================
+   SVG ICONS
+========================= */
+
+.icon-sprite {
+    display: none;
+}
+
+.icon {
+    width: 16px;
+
+    height: 16px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 2;
+
+    stroke-linecap: round;
+
+    stroke-linejoin: round;
+
+    flex-shrink: 0;
+}
+
+.brand-icon .icon {
+    width: 19px;
+
+    height: 19px;
+
+    stroke: white;
+}
+
+.theme-button .icon,
+.swap-button .icon {
+    width: 18px;
+
+    height: 18px;
+}
+
+.feature > span .icon {
+    width: 19px;
+
+    height: 19px;
+
+    stroke: var(--primary-light);
+}
+
+.panel-header h2 .icon {
+    width: 15px;
+
+    height: 15px;
+
+    stroke: var(--primary-light);
+}
+
+.panel-header h2 {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+.small-button {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+}
+
+.theme-button,
+.swap-button {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+
+/* =========================
+   RESULT WATERMARK
+========================= */
+
+.result:empty::before {
+    content: attr(data-placeholder);
+
+    color: var(--muted);
+
+    opacity: 0.45;
+
+    pointer-events: none;
+
+    user-select: none;
+}

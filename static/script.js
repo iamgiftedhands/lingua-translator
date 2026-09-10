@@ -36,6 +36,33 @@ const themeButton =
 
 
 /* =========================
+   ICON HELPERS
+========================= */
+
+function setIcon(button, iconId) {
+
+    const use =
+        button.querySelector("use");
+
+    if (use) {
+        use.setAttribute("href", iconId);
+    }
+}
+
+
+function setButton(button, iconId, label) {
+
+    setIcon(button, iconId);
+
+    const span =
+        button.querySelector(".btn-label");
+
+    if (span) {
+        span.textContent = label;
+    }
+}
+
+/* =========================
    CHARACTER COUNTER
 ========================= */
 
@@ -177,8 +204,7 @@ clearButton.addEventListener("click", () => {
 
     textInput.value = "";
 
-    result.textContent =
-        "Your translation will appear here...";
+    result.textContent = "";
 
     counter.textContent =
         "0 / 5000";
@@ -196,11 +222,7 @@ copyButton.addEventListener("click", async () => {
         result.textContent.trim();
 
 
-    if (
-        !text ||
-        text ===
-        "Your translation will appear here..."
-    ) {
+    if (!text) {
         return;
     }
 
@@ -209,14 +231,12 @@ copyButton.addEventListener("click", async () => {
 
         await navigator.clipboard.writeText(text);
 
-        copyButton.textContent =
-            "✓ Copied!";
+        setButton(copyButton, "#icon-check", "Copied!");
 
 
         setTimeout(() => {
 
-            copyButton.textContent =
-                "📋 Copy";
+            setButton(copyButton, "#icon-copy", "Copy");
 
         }, 1500);
 
@@ -242,11 +262,7 @@ speakButton.addEventListener("click", () => {
         result.textContent.trim();
 
 
-    if (
-        !text ||
-        text ===
-        "Your translation will appear here..."
-    ) {
+    if (!text) {
         return;
     }
 
@@ -298,10 +314,7 @@ swapButton.addEventListener("click", () => {
     }
 
 
-    if (
-        result.textContent !==
-        "Your translation will appear here..."
-    ) {
+    if (result.textContent.trim()) {
 
         textInput.value =
             result.textContent;
@@ -311,8 +324,7 @@ swapButton.addEventListener("click", () => {
             `${textInput.value.length} / 5000`;
 
 
-        result.textContent =
-            "Your translation will appear here...";
+        result.textContent = "";
 
     }
 
@@ -340,7 +352,7 @@ function setTheme(isLight) {
 
         document.body.classList.add("light");
 
-        themeButton.textContent = "🌙";
+        setIcon(themeButton, "#icon-moon");
 
         themeButton.title =
             "Switch to dark mode";
@@ -349,7 +361,7 @@ function setTheme(isLight) {
 
         document.body.classList.remove("light");
 
-        themeButton.textContent = "☀️";
+        setIcon(themeButton, "#icon-sun");
 
         themeButton.title =
             "Switch to light mode";
@@ -522,7 +534,8 @@ function renderHistory() {
 
         deleteButton.type = "button";
 
-        deleteButton.textContent = "✕";
+        deleteButton.innerHTML =
+            '<svg class="icon"><use href="#icon-close"/></svg>';
 
         deleteButton.title = "Delete";
 
@@ -752,8 +765,6 @@ explainButton.addEventListener("click", async () => {
 
     if (
         !translation ||
-        translation ===
-        "Your translation will appear here..." ||
         translation.startsWith("Translation failed") ||
         translation === "Translating..."
     ) {
@@ -763,8 +774,7 @@ explainButton.addEventListener("click", async () => {
 
     explainButton.disabled = true;
 
-    explainButton.textContent =
-        "💡 Explaining...";
+    setButton(explainButton, "#icon-bulb", "Explaining...");
 
 
     try {
@@ -843,8 +853,7 @@ explainButton.addEventListener("click", async () => {
 
         explainButton.disabled = false;
 
-        explainButton.textContent =
-            "💡 Explain";
+        setButton(explainButton, "#icon-bulb", "Explain");
 
     }
 
@@ -926,8 +935,7 @@ if (!SpeechRecognition) {
 
             listening = true;
 
-            micButton.textContent =
-                "🔴 Listening...";
+            setButton(micButton, "#icon-mic", "Listening...");
 
             micButton.classList.add("recording");
         };
@@ -976,8 +984,7 @@ if (!SpeechRecognition) {
 
             listening = false;
 
-            micButton.textContent =
-                "🎙 Speak";
+            setButton(micButton, "#icon-mic", "Speak");
 
             micButton.classList.remove("recording");
         };
