@@ -256,7 +256,13 @@ copyButton.addEventListener("click", async () => {
    TEXT TO SPEECH
 ========================= */
 
-speakButton.addEventListener("click", () => {
+// languages with no browser voice, read by YarnGPT instead
+const NAIJA_VOICES = ["yo", "ig", "ha", "pcm"];
+
+let currentAudio = null;
+
+
+speakButton.addEventListener("click", async () => {
 
     const text =
         result.textContent.trim();
@@ -267,17 +273,96 @@ speakButton.addEventListener("click", () => {
     }
 
 
-    const speech =
-        new SpeechSynthesisUtterance(text);
+    const lang = targetLanguage.value;
 
 
-    speech.lang =
-        targetLanguage.value;
-
-
+    // stop anything already playing
     window.speechSynthesis.cancel();
 
-    window.speechSynthesis.speak(speech);
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+    }
+
+
+    if (!NAIJA_VOICES.includes(lang)) {
+
+        const speech =
+            new SpeechSynthesisUtterance(text);
+
+        speech.lang = lang;
+
+        window.speechSynthesis.speak(speech);
+
+        return;
+    }
+
+
+    // Nigerian language: ask the server for real audio
+    speakButton.disabled = true;
+
+    setButton(speakButton, "#icon-volume", "Loading...");
+
+
+    try {
+
+        const response =
+            await fetch("/speak", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    text: text,
+                    lang: lang
+                })
+
+            });
+
+
+        if (!response.ok) {
+
+            const data =
+                await response.json();
+
+            throw new Error(
+                data.error ||
+                "Could not generate audio."
+            );
+        }
+
+
+        const blob =
+            await response.blob();
+
+
+        currentAudio =
+            new Audio(URL.createObjectURL(blob));
+
+
+        currentAudio.play();
+
+
+    } catch (error) {
+
+        console.error(
+            "Speak error:",
+            error
+        );
+
+        alert(error.message);
+
+    } finally {
+
+        speakButton.disabled = false;
+
+        setButton(speakButton, "#icon-volume", "Listen");
+
+    }
 
 });
 
@@ -1245,12 +1330,18 @@ function hasVoiceFor(code) {
 
 function updateSpeakButton() {
 
-    // no voice installed for this language on this device,
-    // so hide the button rather than have it do nothing
+    const lang = targetLanguage.value;
+
+
+    // YarnGPT covers the Nigerian languages, so the button
+    // stays even when the browser has no voice for them
+    const canSpeak =
+        NAIJA_VOICES.includes(lang) ||
+        hasVoiceFor(lang);
+
+
     speakButton.style.display =
-        hasVoiceFor(targetLanguage.value)
-            ? ""
-            : "none";
+        canSpeak ? "" : "none";
 }
 
 

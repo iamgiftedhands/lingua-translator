@@ -4,7 +4,7 @@ import time
 
 import requests
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from deep_translator import GoogleTranslator
 
 load_dotenv()
@@ -411,6 +411,96 @@ def variants():
 
         return jsonify({
             "error": "Could not generate variants. Please try again."
+        }), 500
+
+
+# YarnGPT covers Nigerian languages that browsers have no
+# voices for. Pidgin isn't an official YarnGPT language, but a
+# Nigerian-accented English voice reads it convincingly.
+YARNGPT_VOICES = {
+    "yo": "Wura",
+    "ig": "Chinenye",
+    "ha": "Zainab",
+    "pcm": "Idera"
+}
+
+
+@app.route("/speak", methods=["POST"])
+def speak():
+
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                "error": "No data received."
+            }), 400
+
+        text = data.get("text", "").strip()
+        lang = data.get("lang", "")
+
+        if not text:
+            return jsonify({
+                "error": "Nothing to read."
+            }), 400
+
+        if len(text) > 1000:
+            return jsonify({
+                "error": "Text is too long to read aloud."
+            }), 400
+
+        voice = YARNGPT_VOICES.get(lang)
+
+        if not voice:
+            return jsonify({
+                "error": "No Nigerian voice for this language."
+            }), 400
+
+        api_key = os.environ.get("YARNGPT_API_KEY")
+
+        if not api_key:
+            return jsonify({
+                "error": "Nigerian voices are not configured."
+            }), 503
+
+        response = requests.post(
+            "https://yarngpt.ai/api/v1/tts",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "text": text,
+                "voice": voice,
+                "response_format": "mp3"
+            },
+            timeout=90
+        )
+
+        if response.status_code == 429:
+            return jsonify({
+                "error": "Daily voice limit reached. Try again tomorrow."
+            }), 429
+
+        if not response.ok:
+            print(
+                "YarnGPT said:",
+                response.status_code,
+                response.text[:300]
+            )
+
+        response.raise_for_status()
+
+        return Response(
+            response.content,
+            mimetype="audio/mpeg"
+        )
+
+    except Exception as e:
+        print("Speak error:", e)
+
+        return jsonify({
+            "error": "Could not generate audio. Please try again."
         }), 500
 
 
